@@ -42,6 +42,18 @@ const OBSERVER_RING_ALTITUDE = 0.02;
 const OBSERVER_RING_COLOR = "rgba(139, 34, 82, 0.85)";
 const GROUND_TRACK_COLOR = "rgba(255, 176, 32, 0.95)";
 const GROUND_TRACK_PAST_COLOR = "rgba(255, 176, 32, 0.28)";
+const POLYGON_ALT_BASE = 0.006;
+const POLYGON_ALT_REGIONAL = 0.009;
+const POLYGON_ALT_HOVER = 0.012;
+
+function countryTooltipHtml(f: CountryFeature): string {
+  const name = countryName(f);
+  const iso = f.properties?.ISO_A3 ?? "";
+  return `<div style="padding:6px 10px;background:rgba(8,12,20,0.94);border:1px solid rgba(0,212,255,0.45);border-radius:6px;font-family:system-ui,sans-serif;line-height:1.3;">
+    <div style="font-size:13px;font-weight:600;color:#e8edf5;">${name}</div>
+    ${iso ? `<div style="font-size:10px;color:#8899aa;margin-top:2px;">${iso}</div>` : ""}
+  </div>`;
+}
 
 function groupHex(groupTag?: string): string {
   if (!groupTag) return "#ffffff";
@@ -122,6 +134,8 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
   const [positions, setPositions] = useState<SatPoint[]>([]);
   const [trackPaths, setTrackPaths] = useState<GlobeTrackPath[]>([]);
   const [countries, setCountries] = useState<CountryFeature[]>([]);
+  const [hoverCountry, setHoverCountry] = useState<CountryFeature | null>(null);
+  const trackSnapshotRef = useRef("");
 
   const observer = useUplinkStore((s) => s.observer);
   const selectedNoradId = useUplinkStore((s) => s.selectedNoradId);
@@ -150,6 +164,9 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
 
   const applyGroundTrack = useCallback((noradId: number, past: TrackPoint[], future: TrackPoint[]) => {
     if (noradId !== selectedNoradIdRef.current) return;
+    const snapshot = `${noradId}|${past.length}|${future.length}|${past.at(-1)?.join(",")}|${future.at(-1)?.join(",")}`;
+    if (snapshot === trackSnapshotRef.current) return;
+    trackSnapshotRef.current = snapshot;
     setTrackPaths(prepareLiveGroundTrackPaths(noradId, past, future));
   }, []);
 
@@ -296,6 +313,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
   }, [observer?.lat, observer?.lon, observer?.id, selectedNoradId]);
 
   useEffect(() => {
+    trackSnapshotRef.current = "";
     setTrackPaths([]);
     if (!workerRef.current || !selectedNoradId) return;
     workerRef.current.postMessage({
@@ -400,6 +418,10 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
     [observer, commsScore, regionalMode],
   );
 
+  const handlePolygonHover = useCallback((polygon: object | null) => {
+    setHoverCountry(polygon as CountryFeature | null);
+  }, []);
+
   const handlePolygonClick = useCallback(
     (polygon: object) => {
       const f = polygon as CountryFeature;
@@ -440,19 +462,24 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       data-comms={commsScore > 60 ? "critical" : commsScore > 30 ? "warning" : "normal"}
     >
       <div className={styles.uiLayer}>
-        {observer && (
-          <div className={styles.observerChip}>
-            <span className={styles.observerChipLabel}>Observer site</span>
-            <span className={styles.observerChipName}>
-              {observer.name}
-              {observer.country ? ` · ${observer.country}` : ""}
-            </span>
-          </div>
-        )}
-        {selectedSat && (
-          <div className={styles.trackingChip}>
-            <span className={styles.trackingChipLabel}>Ground track</span>
-            <span className={styles.trackingChipName}>{selectedSat.name}</span>
+        {(observer || selectedSat) && (
+          <div className={styles.statusBar}>
+            {observer && (
+              <div className={styles.statusItem}>
+                <span className={styles.statusLabelObserver}>Observer</span>
+                <span className={styles.statusValue}>
+                  {observer.name}
+                  {observer.country ? ` · ${observer.country}` : ""}
+                </span>
+              </div>
+            )}
+            {observer && selectedSat && <span className={styles.statusDivider} aria-hidden />}
+            {selectedSat && (
+              <div className={styles.statusItem}>
+                <span className={styles.statusLabelTrack}>Ground track</span>
+                <span className={styles.statusValue}>{selectedSat.name}</span>
+              </div>
+            )}
           </div>
         )}
         <GlobeHelp regionalMode={regionalMode} />
@@ -471,10 +498,25 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           enablePointerInteraction
           onGlobeReady={handleGlobeReady}
           polygonsData={countries}
-          polygonCapColor={() => (regionalMode ? "rgba(0, 212, 255, 0.06)" : "rgba(0, 212, 255, 0.03)")}
+          polygonCapColor={(d: object) => {
+            const f = d as CountryFeature;
+            if (f === hoverCountry) return "rgba(0, 212, 255, 0.16)";
+            return regionalMode ? "rgba(0, 212, 255, 0.06)" : "rgba(0, 212, 255, 0.03)";
+          }}
           polygonSideColor={() => "rgba(0, 0, 0, 0)"}
-          polygonStrokeColor={() => (regionalMode ? "rgba(0, 212, 255, 0.5)" : "rgba(0, 212, 255, 0.2)")}
-          polygonAltitude={regionalMode ? 0.008 : 0.004}
+          polygonStrokeColor={(d: object) => {
+            const f = d as CountryFeature;
+            if (f === hoverCountry) return "rgba(0, 212, 255, 0.85)";
+            return regionalMode ? "rgba(0, 212, 255, 0.5)" : "rgba(0, 212, 255, 0.2)";
+          }}
+          polygonAltitude={(d: object) => {
+            const f = d as CountryFeature;
+            if (f === hoverCountry) return POLYGON_ALT_HOVER;
+            return regionalMode ? POLYGON_ALT_REGIONAL : POLYGON_ALT_BASE;
+          }}
+          polygonLabel={(d: object) => countryTooltipHtml(d as CountryFeature)}
+          polygonsTransitionDuration={200}
+          onPolygonHover={handlePolygonHover}
           onPolygonClick={handlePolygonClick}
           pointsData={positions}
           pointLat="lat"

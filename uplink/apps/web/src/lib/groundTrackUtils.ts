@@ -1,7 +1,7 @@
 export type TrackPoint = [number, number, number];
 
 const POLE_GUARD_LAT = 85;
-const GROUND_TRACK_SURFACE_ALT = 0.002;
+const GROUND_TRACK_SURFACE_ALT = 0.016;
 const MAX_GROUND_TRACK_POINTS = 48;
 
 export type TrackPathRole = "past" | "future";

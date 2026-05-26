@@ -41,7 +41,7 @@ export function GlobeHelp({ regionalMode }: GlobeHelpProps) {
         <strong>Search a city</strong> → camera flies to your site
       </p>
       <p>
-        <strong>Double-click land</strong> → set observer · <strong>Drag</strong> rotate · <strong>Scroll</strong> zoom
+        <strong>Hover a country</strong> → name tooltip · <strong>Double-click land</strong> → set observer
       </p>
       <p>
         <strong>Click a sat dot</strong> → live ground track for that spacecraft (updates every few seconds)

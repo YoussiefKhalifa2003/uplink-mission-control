@@ -19,6 +19,8 @@ export interface LiveGroundTrack {
   future: GroundTrackPoint[];
 }
 
+const GROUND_TRACK_SURFACE_ALT = 0.016;
+
 export function computeGroundTrack(
   satrec: SatRec,
   options: GroundTrackOptions = {},
@@ -34,7 +36,7 @@ export function computeGroundTrack(
     const date = new Date(startTime.getTime() + sec * 1000);
     const pos = propagateToGeodetic(satrec, date);
     if (pos) {
-      points.push([pos.lat, pos.lng, 0.002]);
+      points.push([pos.lat, pos.lng, GROUND_TRACK_SURFACE_ALT]);
     }
   }
 
@@ -64,7 +66,7 @@ export function computeLiveGroundTrack(
   for (let t = startMs; t <= endMs; t += stepMs) {
     const pos = propagateToGeodetic(satrec, new Date(t));
     if (pos) {
-      points.push([pos.lat, pos.lng, 0.002]);
+      points.push([pos.lat, pos.lng, GROUND_TRACK_SURFACE_ALT]);
     }
   }
 

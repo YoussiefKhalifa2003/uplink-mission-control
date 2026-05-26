@@ -91,6 +91,11 @@ let observer: ObserverContext | null = null;
 
 let lastGroundTrackNoradId: number | null = null;
 let lastGroundTrackAt = 0;
+let cachedGroundTrack: {
+  noradId: number;
+  past: Array<[number, number, number]>;
+  future: Array<[number, number, number]>;
+} | null = null;
 const GROUND_TRACK_REFRESH_MS = 3000;
 
 function buildLiveGroundTrack(noradId: number, date: Date) {
@@ -148,6 +153,7 @@ self.onmessage = (ev: MessageEvent) => {
 
     lastGroundTrackNoradId = null;
     lastGroundTrackAt = 0;
+    cachedGroundTrack = null;
 
 
 
@@ -435,19 +441,22 @@ self.onmessage = (ev: MessageEvent) => {
 
 
 
-    let groundTrack: { noradId: number; past: Array<[number, number, number]>; future: Array<[number, number, number]> } | null = null;
+    let groundTrack = cachedGroundTrack;
     const selectedId = observer?.selectedNoradId ?? null;
     if (selectedId != null) {
       const nowMs = Date.now();
       if (selectedId !== lastGroundTrackNoradId || nowMs - lastGroundTrackAt >= GROUND_TRACK_REFRESH_MS) {
         const built = buildLiveGroundTrack(selectedId, date);
         if (built) {
+          cachedGroundTrack = built;
           groundTrack = built;
           lastGroundTrackNoradId = selectedId;
           lastGroundTrackAt = nowMs;
         }
       }
     } else {
+      cachedGroundTrack = null;
+      groundTrack = null;
       lastGroundTrackNoradId = null;
     }
 
@@ -504,6 +513,7 @@ self.onmessage = (ev: MessageEvent) => {
       return;
     }
 
+    cachedGroundTrack = built;
     lastGroundTrackNoradId = msg.noradId;
     lastGroundTrackAt = Date.now();
 

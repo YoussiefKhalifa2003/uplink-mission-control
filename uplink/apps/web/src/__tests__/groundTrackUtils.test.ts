@@ -43,8 +43,8 @@ describe("groundTrackUtils", () => {
       [11, 21, 0.06],
     ];
     expect(toSurfaceTrack(track)).toEqual([
-      [10, 20, 0.002],
-      [11, 21, 0.002],
+      [10, 20, 0.016],
+      [11, 21, 0.016],
     ]);
   });
 
