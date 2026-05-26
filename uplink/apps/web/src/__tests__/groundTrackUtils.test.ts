@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
-  prepareGroundTrackForGlobe,
+  prepareLiveGroundTrackPaths,
   splitTrackAtAntimeridian,
   subsampleTrack,
   toSurfaceTrack,
 } from "../lib/groundTrackUtils";
 
 describe("groundTrackUtils", () => {
-  it("splits track at antimeridian", () => {
+  it("splits track at antimeridian with boundary points", () => {
     const track: Array<[number, number, number]> = [
-      [0, 170, 0.4],
-      [0, 175, 0.4],
-      [0, -175, 0.4],
-      [0, -170, 0.4],
+      [0, 170, 0.002],
+      [0, 175, 0.002],
+      [0, -175, 0.002],
+      [0, -170, 0.002],
     ];
     const segments = splitTrackAtAntimeridian(track);
     expect(segments).toHaveLength(2);
-    expect(segments[0]).toHaveLength(2);
-    expect(segments[1]).toHaveLength(2);
+    expect(segments[0]!.at(-1)?.[1]).toBe(180);
+    expect(segments[1]![0]?.[1]).toBe(-180);
   });
 
   it("does not over-split near poles when longitude jumps", () => {
@@ -48,14 +48,11 @@ describe("groundTrackUtils", () => {
     ]);
   });
 
-  it("prepares a single clean path segment for typical tracks", () => {
-    const track = Array.from({ length: 80 }, (_, i) => [30, -100 + i * 2, 0.06] as [number, number, number]);
-    const paths = prepareGroundTrackForGlobe(track);
-    expect(paths.length).toBeGreaterThan(0);
-    expect(paths.length).toBeLessThanOrEqual(2);
-    for (const path of paths) {
-      expect(path.coords.length).toBeGreaterThan(1);
-      expect(path.coords.every(([, , alt]) => alt === 0.002)).toBe(true);
-    }
+  it("builds unique path ids per satellite and role", () => {
+    const pathsA = prepareLiveGroundTrackPaths(25544, [[0, 10, 0.002], [1, 12, 0.002]], [[1, 12, 0.002], [2, 14, 0.002]]);
+    const pathsB = prepareLiveGroundTrackPaths(43013, [[30, 40, 0.002], [31, 42, 0.002]], [[31, 42, 0.002], [32, 44, 0.002]]);
+    expect(pathsA[0]?.id).toContain("25544");
+    expect(pathsB[0]?.id).toContain("43013");
+    expect(pathsA[0]?.id).not.toEqual(pathsB[0]?.id);
   });
 });

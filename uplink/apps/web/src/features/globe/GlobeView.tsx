@@ -3,7 +3,7 @@ import Globe from "react-globe.gl";
 import type { GlobeMethods } from "react-globe.gl";
 import type { Satellite, City } from "@uplink/shared";
 import { api } from "../../lib/api";
-import { prepareGroundTrackForGlobe, type TrackPoint } from "../../lib/groundTrackUtils";
+import { prepareLiveGroundTrackPaths, type GlobeTrackPath, type TrackPoint } from "../../lib/groundTrackUtils";
 import { useUplinkStore } from "../../stores/uplinkStore";
 import { GlobeHelp } from "./GlobeHelp";
 import styles from "./GlobeView.module.css";
@@ -40,7 +40,8 @@ const REGIONAL_ALTITUDE = 1.5;
 const OBSERVER_FLY_ALTITUDE = 1.05;
 const OBSERVER_RING_ALTITUDE = 0.02;
 const OBSERVER_RING_COLOR = "rgba(139, 34, 82, 0.85)";
-const GROUND_TRACK_COLOR = "rgba(255, 176, 32, 0.9)";
+const GROUND_TRACK_COLOR = "rgba(255, 176, 32, 0.95)";
+const GROUND_TRACK_PAST_COLOR = "rgba(255, 176, 32, 0.28)";
 
 function groupHex(groupTag?: string): string {
   if (!groupTag) return "#ffffff";
@@ -119,7 +120,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [globeReady, setGlobeReady] = useState(false);
   const [positions, setPositions] = useState<SatPoint[]>([]);
-  const [trackPaths, setTrackPaths] = useState<Array<{ id: string; coords: TrackPoint[] }>>([]);
+  const [trackPaths, setTrackPaths] = useState<GlobeTrackPath[]>([]);
   const [countries, setCountries] = useState<CountryFeature[]>([]);
 
   const observer = useUplinkStore((s) => s.observer);
@@ -141,7 +142,16 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
   positionsRef.current = positions;
 
   const displaySats = useMemo(() => satellites.slice(0, 40), [satellites]);
+  const selectedSat = useMemo(
+    () => displaySats.find((s) => s.noradId === selectedNoradId) ?? null,
+    [displaySats, selectedNoradId],
+  );
   const regionalMode = globeAltitude < REGIONAL_ALTITUDE;
+
+  const applyGroundTrack = useCallback((noradId: number, past: TrackPoint[], future: TrackPoint[]) => {
+    if (noradId !== selectedNoradIdRef.current) return;
+    setTrackPaths(prepareLiveGroundTrackPaths(noradId, past, future));
+  }, []);
 
   useEffect(() => {
     if (!globeReady) return;
@@ -255,11 +265,14 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
             observerLon: obs?.lon,
           });
         }
+
+        if (data.groundTrack) {
+          applyGroundTrack(data.groundTrack.noradId, data.groundTrack.past, data.groundTrack.future);
+        }
       }
 
       if (data.type === "GROUND_TRACK") {
-        if (data.noradId !== selectedNoradIdRef.current) return;
-        setTrackPaths(prepareGroundTrackForGlobe(data.track as TrackPoint[]));
+        applyGroundTrack(data.noradId, data.past ?? [], data.future ?? []);
       }
     };
 
@@ -270,7 +283,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       setLiveLookAngles(null);
       setOverheadSats([]);
     };
-  }, [displaySats, setLiveLookAngles, setPropagationTickAt, setOverheadSats]);
+  }, [displaySats, setLiveLookAngles, setPropagationTickAt, setOverheadSats, applyGroundTrack]);
 
   useEffect(() => {
     if (!workerRef.current || !observer) return;
@@ -436,6 +449,12 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
             </span>
           </div>
         )}
+        {selectedSat && (
+          <div className={styles.trackingChip}>
+            <span className={styles.trackingChipLabel}>Ground track</span>
+            <span className={styles.trackingChipName}>{selectedSat.name}</span>
+          </div>
+        )}
         <GlobeHelp regionalMode={regionalMode} />
       </div>
       {globeSized && (
@@ -474,8 +493,8 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           pathPointLat={(d: number | TrackPoint) => (Array.isArray(d) ? d[0] : 0)}
           pathPointLng={(d: number | TrackPoint) => (Array.isArray(d) ? d[1] : 0)}
           pathPointAlt={(d: number | TrackPoint) => (Array.isArray(d) ? d[2] : 0)}
-          pathColor={() => GROUND_TRACK_COLOR}
-          pathStroke={1.6}
+          pathColor={(path: object) => ((path as GlobeTrackPath).role === "past" ? GROUND_TRACK_PAST_COLOR : GROUND_TRACK_COLOR)}
+          pathStroke={(path: object) => ((path as GlobeTrackPath).role === "past" ? 1.2 : 2)}
           ringsData={ringsData}
           ringAltitude={OBSERVER_RING_ALTITUDE}
           ringColor={() => OBSERVER_RING_COLOR}

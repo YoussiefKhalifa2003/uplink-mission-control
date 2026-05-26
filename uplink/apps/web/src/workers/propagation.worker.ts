@@ -10,7 +10,7 @@ import {
 
 
 
-  computeGroundTrackSegments,
+  computeLiveGroundTrack,
   computeLookAngles,
 
 
@@ -89,6 +89,17 @@ const satNames = new Map<number, string>();
 
 let observer: ObserverContext | null = null;
 
+let lastGroundTrackNoradId: number | null = null;
+let lastGroundTrackAt = 0;
+const GROUND_TRACK_REFRESH_MS = 3000;
+
+function buildLiveGroundTrack(noradId: number, date: Date) {
+  const satrec = satrecs.get(noradId);
+  if (!satrec) return null;
+  const { past, future } = computeLiveGroundTrack(satrec, date);
+  return { noradId, past, future };
+}
+
 
 
 
@@ -132,6 +143,11 @@ self.onmessage = (ev: MessageEvent) => {
 
 
     satNames.clear();
+
+
+
+    lastGroundTrackNoradId = null;
+    lastGroundTrackAt = 0;
 
 
 
@@ -419,11 +435,29 @@ self.onmessage = (ev: MessageEvent) => {
 
 
 
+    let groundTrack: { noradId: number; past: Array<[number, number, number]>; future: Array<[number, number, number]> } | null = null;
+    const selectedId = observer?.selectedNoradId ?? null;
+    if (selectedId != null) {
+      const nowMs = Date.now();
+      if (selectedId !== lastGroundTrackNoradId || nowMs - lastGroundTrackAt >= GROUND_TRACK_REFRESH_MS) {
+        const built = buildLiveGroundTrack(selectedId, date);
+        if (built) {
+          groundTrack = built;
+          lastGroundTrackNoradId = selectedId;
+          lastGroundTrackAt = nowMs;
+        }
+      }
+    } else {
+      lastGroundTrackNoradId = null;
+    }
 
 
 
 
-    self.postMessage({ type: "TICK_RESULT", positions, lookAngles, overhead });
+
+
+
+    self.postMessage({ type: "TICK_RESULT", positions, lookAngles, overhead, groundTrack });
 
 
 
@@ -464,12 +498,16 @@ self.onmessage = (ev: MessageEvent) => {
 
 
     const now = msg.timestamp ? new Date(msg.timestamp) : new Date();
-    const { past, future } = computeGroundTrackSegments(satrec, now);
-    const track = past.length ? [...past, ...future.slice(1)] : future;
+    const built = buildLiveGroundTrack(msg.noradId, now);
+    if (!built) {
+      self.postMessage({ type: "GROUND_TRACK", noradId: msg.noradId, past: [], future: [] });
+      return;
+    }
 
+    lastGroundTrackNoradId = msg.noradId;
+    lastGroundTrackAt = Date.now();
 
-
-    self.postMessage({ type: "GROUND_TRACK", noradId: msg.noradId, track });
+    self.postMessage({ type: "GROUND_TRACK", noradId: msg.noradId, past: built.past, future: built.future });
 
 
 

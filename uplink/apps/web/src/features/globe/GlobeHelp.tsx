@@ -44,8 +44,9 @@ export function GlobeHelp({ regionalMode }: GlobeHelpProps) {
         <strong>Double-click land</strong> → set observer · <strong>Drag</strong> rotate · <strong>Scroll</strong> zoom
       </p>
       <p>
-        <strong>Click a sat dot</strong> → track satellite + orbit
+        <strong>Click a sat dot</strong> → live ground track for that spacecraft (updates every few seconds)
       </p>
+      <p className={styles.note}>All dots move in real time · orange path = selected satellite only</p>
       {regionalMode ? (
         <p className={styles.active}>Zoomed in — borders & overhead labels on</p>
       ) : null}

@@ -4,6 +4,7 @@ import {
   propagateToGeodetic,
   computeLookAngles,
   predictPasses,
+  computeLiveGroundTrack,
   EARTH_RADIUS_KM,
 } from "../index.js";
 
@@ -61,5 +62,23 @@ describe("Pass prediction", () => {
     expect(passes.length).toBeGreaterThan(0);
     expect(passes[0]!.maxElevationDeg).toBeGreaterThanOrEqual(10);
     expect(passes[0]!.durationSec).toBeGreaterThan(0);
+  });
+});
+
+describe("Live ground track", () => {
+  it("produces different subsatellite paths for different satellites", () => {
+    const iss = parseTleBlock(ISS_TLE)!;
+    const now = new Date("2024-05-01T12:00:00Z");
+    const issTrack = computeLiveGroundTrack(iss.satrec, now);
+
+    const hubbleTle = `HST
+1 20580U 90037B   24120.50000000  .00000100  00000-0  10000-4 0  9990
+2 20580  28.4700 120.0000 0002800  90.0000 270.0000 15.09000000000000`;
+    const hst = parseTleBlock(hubbleTle)!;
+    const hstTrack = computeLiveGroundTrack(hst.satrec, now);
+
+    expect(issTrack.future.length).toBeGreaterThan(2);
+    expect(hstTrack.future.length).toBeGreaterThan(2);
+    expect(issTrack.future[0]).not.toEqual(hstTrack.future[0]);
   });
 });

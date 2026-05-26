@@ -79,6 +79,13 @@
   font-weight: 600;
 }
 
+.note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .active {
   color: var(--accent-cyan) !important;
   margin-top: 4px !important;
