@@ -428,14 +428,11 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       className={`${styles.globeWrap} ${regionalMode ? styles.regional : ""}`}
       data-comms={commsScore > 60 ? "critical" : commsScore > 30 ? "warning" : "normal"}
     >
-      <GlobeHelp regionalMode={regionalMode} />
-      {observer ? (
-        <div className={styles.observerChip}>
-          <span className={styles.observerChipLabel}>Observer</span>
-          <span className={styles.observerChipName}>{observer.name}</span>
-        </div>
-      ) : null}
+      <div className={styles.uiLayer}>
+        <GlobeHelp regionalMode={regionalMode} />
+      </div>
       {globeSized && (
+        <div className={styles.globeCanvas}>
         <Globe
           ref={globeRef}
           width={dimensions.width}
@@ -478,10 +475,8 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           ringPropagationSpeed="propagationSpeed"
           ringRepeatPeriod="repeatPeriod"
         />
+        </div>
       )}
-      {regionalMode ? (
-        <div className={styles.regionalHint}>Zoomed in · double-click land to move observer</div>
-      ) : null}
     </div>
   );
 };

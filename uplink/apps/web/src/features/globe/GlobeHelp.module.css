@@ -2,7 +2,6 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  z-index: 10;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -14,6 +13,7 @@
   font-weight: 700;
   cursor: pointer;
   line-height: 1;
+  padding: 0;
 }
 
 .toggleBtn:hover {
@@ -24,16 +24,12 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  z-index: 10;
   width: 220px;
-  max-width: calc(100% - 20px);
-  max-height: 140px;
-  overflow: hidden;
+  max-width: calc(100vw - 360px);
   background: rgba(10, 14, 23, 0.92);
   border: 1px solid rgba(0, 212, 255, 0.28);
   border-radius: 8px;
   padding: 8px 10px;
-  pointer-events: auto;
   backdrop-filter: blur(6px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
