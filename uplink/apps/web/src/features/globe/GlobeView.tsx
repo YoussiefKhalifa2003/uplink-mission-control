@@ -38,12 +38,8 @@ interface GlobeViewProps {
 const EARTH_TEXTURE = "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
 const REGIONAL_ALTITUDE = 1.5;
 const OBSERVER_FLY_ALTITUDE = 1.05;
-
-function commsColor(score: number): string {
-  if (score <= 30) return "rgba(0, 212, 255, 0.35)";
-  if (score <= 60) return "rgba(255, 176, 32, 0.45)";
-  return "rgba(255, 59, 59, 0.55)";
-}
+const OBSERVER_RING_ALTITUDE = 0.02;
+const OBSERVER_RING_COLOR = "rgba(139, 34, 82, 0.85)";
 
 function groupHex(groupTag?: string): string {
   if (!groupTag) return "#ffffff";
@@ -429,6 +425,15 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       data-comms={commsScore > 60 ? "critical" : commsScore > 30 ? "warning" : "normal"}
     >
       <div className={styles.uiLayer}>
+        {observer && (
+          <div className={styles.observerChip}>
+            <span className={styles.observerChipLabel}>Observer site</span>
+            <span className={styles.observerChipName}>
+              {observer.name}
+              {observer.country ? ` · ${observer.country}` : ""}
+            </span>
+          </div>
+        )}
         <GlobeHelp regionalMode={regionalMode} />
       </div>
       {globeSized && (
@@ -470,7 +475,8 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           pathColor={() => "rgba(0, 212, 255, 0.85)"}
           pathStroke={2}
           ringsData={ringsData}
-          ringColor={() => (regionalMode ? "rgba(0, 212, 255, 0.5)" : commsColor(commsScore))}
+          ringAltitude={OBSERVER_RING_ALTITUDE}
+          ringColor={() => OBSERVER_RING_COLOR}
           ringMaxRadius="maxR"
           ringPropagationSpeed="propagationSpeed"
           ringRepeatPeriod="repeatPeriod"
