@@ -1,33 +1,54 @@
+import { useState } from "react";
 import styles from "./GlobeHelp.module.css";
+
+const STORAGE_KEY = "uplink_globe_help_open";
 
 interface GlobeHelpProps {
   regionalMode: boolean;
 }
 
 export function GlobeHelp({ regionalMode }: GlobeHelpProps) {
+  const [open, setOpen] = useState(() => localStorage.getItem(STORAGE_KEY) !== "0");
+
+  const toggle = (next: boolean) => {
+    setOpen(next);
+    localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className={styles.toggleBtn}
+        onClick={() => toggle(true)}
+        aria-label="Show globe controls"
+        title="Globe controls"
+      >
+        ?
+      </button>
+    );
+  }
+
   return (
     <div className={styles.help} aria-label="Globe controls help">
-      <div className={styles.title}>How to use the globe</div>
-      <ul>
-        <li>
-          <strong>Search a city</strong> in the right panel — the camera flies to your observer site, not the satellite.
-        </li>
-        <li>
-          <strong>Drag</strong> to rotate · <strong>Scroll</strong> to zoom · <strong>Click land</strong> to set a custom observer
-        </li>
-        <li>
-          <strong>Click a satellite dot</strong> to track it and show its orbit path
-        </li>
-        {regionalMode ? (
-          <li className={styles.active}>
-            <strong>Regional view</strong> — country borders stay visible. Overhead satellites are labeled.
-          </li>
-        ) : (
-          <li>
-            <strong>Zoom in</strong> on a city for regional detail and overhead satellite labels
-          </li>
-        )}
-      </ul>
+      <div className={styles.head}>
+        <span className={styles.title}>Globe controls</span>
+        <button type="button" className={styles.close} onClick={() => toggle(false)} aria-label="Hide help">
+          ×
+        </button>
+      </div>
+      <p>
+        <strong>Search a city</strong> → camera flies to your site
+      </p>
+      <p>
+        <strong>Double-click land</strong> → set observer · <strong>Drag</strong> rotate · <strong>Scroll</strong> zoom
+      </p>
+      <p>
+        <strong>Click a sat dot</strong> → track satellite + orbit
+      </p>
+      {regionalMode ? (
+        <p className={styles.active}>Zoomed in — borders & overhead labels on</p>
+      ) : null}
     </div>
   );
 }

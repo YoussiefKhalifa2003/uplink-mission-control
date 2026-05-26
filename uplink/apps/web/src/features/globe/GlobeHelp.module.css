@@ -1,36 +1,77 @@
+.toggleBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  background: rgba(10, 14, 23, 0.9);
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.toggleBtn:hover {
+  background: rgba(0, 212, 255, 0.15);
+}
+
 .help {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 10px;
+  left: 10px;
   z-index: 10;
-  max-width: 320px;
-  background: rgba(10, 14, 23, 0.88);
-  border: 1px solid rgba(0, 212, 255, 0.25);
+  width: 240px;
+  background: rgba(10, 14, 23, 0.92);
+  border: 1px solid rgba(0, 212, 255, 0.28);
   border-radius: 8px;
-  padding: 12px 14px;
-  pointer-events: none;
-  backdrop-filter: blur(8px);
+  padding: 8px 10px;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
 .title {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--accent-cyan);
-  margin-bottom: 8px;
 }
 
-.help ul {
-  margin: 0;
-  padding-left: 16px;
-  font-size: 0.75rem;
-  line-height: 1.45;
+.close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.close:hover {
+  color: var(--text-primary);
+}
+
+.help p {
+  margin: 0 0 4px;
+  font-size: 0.68rem;
+  line-height: 1.4;
   color: var(--text-muted);
 }
 
-.help li {
-  margin-bottom: 4px;
+.help p:last-child {
+  margin-bottom: 0;
 }
 
 .help strong {
@@ -39,15 +80,6 @@
 }
 
 .active {
-  color: var(--accent-cyan);
-}
-
-.active strong {
-  color: var(--accent-cyan);
-}
-
-@media (max-width: 768px) {
-  .help {
-    display: none;
-  }
+  color: var(--accent-cyan) !important;
+  margin-top: 4px !important;
 }

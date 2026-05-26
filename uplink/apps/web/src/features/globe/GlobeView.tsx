@@ -36,8 +36,8 @@ interface GlobeViewProps {
 }
 
 const EARTH_TEXTURE = "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
-const NIGHT_TEXTURE = "//unpkg.com/three-globe/example/img/earth-night.jpg";
 const REGIONAL_ALTITUDE = 1.5;
+const OBSERVER_FLY_ALTITUDE = 1.05;
 
 function commsColor(score: number): string {
   if (score <= 30) return "rgba(0, 212, 255, 0.35)";
@@ -295,6 +295,31 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
     });
   }, [selectedNoradId]);
 
+  const setObserverFromCoords = useCallback(
+    async (lat: number, lng: number, label?: string) => {
+      const cities = citiesRef.current;
+      const nearest = cities.reduce<{ city: City; dist: number } | null>((best, c) => {
+        const d = (c.lat - lat) ** 2 + (c.lon - lng) ** 2;
+        if (!best || d < best.dist) return { city: c, dist: d };
+        return best;
+      }, null);
+      const useBundled = nearest && nearest.dist < 4;
+      const city: City = useBundled
+        ? nearest!.city
+        : {
+            id: `pin-${lat.toFixed(2)}-${lng.toFixed(2)}`,
+            name: label ?? `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? "E" : "W"}`,
+            country: label ? "" : "Custom",
+            lat,
+            lon: lng,
+            timezone: "UTC",
+          };
+      setObserver(city);
+      setToastMessage(`Observer set to ${city.name} — passes & tracking updated`);
+    },
+    [setObserver, setToastMessage],
+  );
+
   useEffect(() => {
     if (!globeReady || !globeRef.current) return;
     const globe = globeRef.current;
@@ -307,12 +332,35 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
     return () => controls.removeEventListener("change", onChange);
   }, [globeReady, setGlobeAltitude]);
 
+  // Double-click land to set observer (single click is for drag/rotate)
+  useEffect(() => {
+    if (!globeReady || !globeRef.current) return;
+    const globe = globeRef.current;
+    const canvas = globe.renderer().domElement;
+
+    const onDblClick = (ev: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = ev.clientX - rect.left;
+      const y = ev.clientY - rect.top;
+      type GlobeWithCoords = GlobeMethods & {
+        toGlobeCoords?: (x: number, y: number) => { lat: number; lng: number } | null;
+      };
+      const coords = (globe as GlobeWithCoords).toGlobeCoords?.(x, y);
+      if (coords) void setObserverFromCoords(coords.lat, coords.lng);
+    };
+
+    canvas.addEventListener("dblclick", onDblClick);
+    return () => canvas.removeEventListener("dblclick", onDblClick);
+  }, [globeReady, setObserverFromCoords]);
+
   // City / observer fly — always takes priority over satellite tracking
   useEffect(() => {
     if (!globeReady || !globeRef.current || !observer || flyToObserverSeq === 0) return;
-    const alt = regionalMode ? 0.75 : 1.2;
-    globeRef.current.pointOfView({ lat: observer.lat, lng: observer.lon, altitude: alt }, 1200);
-  }, [flyToObserverSeq, globeReady, observer, regionalMode]);
+    globeRef.current.pointOfView(
+      { lat: observer.lat, lng: observer.lon, altitude: OBSERVER_FLY_ALTITUDE },
+      1200,
+    );
+  }, [flyToObserverSeq, globeReady, observer]);
 
   // Satellite fly — only when user explicitly clicks a satellite
   useEffect(() => {
@@ -352,38 +400,6 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           ]
         : [],
     [observer, commsScore, regionalMode],
-  );
-
-  const setObserverFromCoords = useCallback(
-    async (lat: number, lng: number, label?: string) => {
-      const cities = citiesRef.current;
-      const nearest = cities.reduce<{ city: City; dist: number } | null>((best, c) => {
-        const d = (c.lat - lat) ** 2 + (c.lon - lng) ** 2;
-        if (!best || d < best.dist) return { city: c, dist: d };
-        return best;
-      }, null);
-      const useBundled = nearest && nearest.dist < 4;
-      const city: City = useBundled
-        ? nearest!.city
-        : {
-            id: `pin-${lat.toFixed(2)}-${lng.toFixed(2)}`,
-            name: label ?? `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}, ${Math.abs(lng).toFixed(2)}°${lng >= 0 ? "E" : "W"}`,
-            country: label ? "" : "Custom",
-            lat,
-            lon: lng,
-            timezone: "UTC",
-          };
-      setObserver(city);
-      setToastMessage(`Observer set to ${city.name} — passes & tracking updated`);
-    },
-    [setObserver, setToastMessage],
-  );
-
-  const handleGlobeClick = useCallback(
-    ({ lat, lng }: { lat: number; lng: number }) => {
-      void setObserverFromCoords(lat, lng);
-    },
-    [setObserverFromCoords],
   );
 
   const handlePolygonClick = useCallback(
@@ -432,19 +448,17 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           width={dimensions.width}
           height={dimensions.height}
           globeImageUrl={EARTH_TEXTURE}
-          bumpImageUrl={regionalMode ? undefined : NIGHT_TEXTURE}
           backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
           showAtmosphere
-          atmosphereColor="rgba(0, 200, 255, 0.14)"
-          atmosphereAltitude={0.18}
+          atmosphereColor="rgba(0, 200, 255, 0.1)"
+          atmosphereAltitude={0.15}
           enablePointerInteraction
           onGlobeReady={handleGlobeReady}
-          onGlobeClick={handleGlobeClick}
           polygonsData={countries}
-          polygonCapColor={() => (regionalMode ? "rgba(0, 212, 255, 0.08)" : "rgba(0, 212, 255, 0.04)")}
+          polygonCapColor={() => (regionalMode ? "rgba(0, 212, 255, 0.06)" : "rgba(0, 212, 255, 0.03)")}
           polygonSideColor={() => "rgba(0, 0, 0, 0)"}
-          polygonStrokeColor={() => (regionalMode ? "rgba(0, 212, 255, 0.45)" : "rgba(0, 212, 255, 0.18)")}
-          polygonAltitude={regionalMode ? 0.01 : 0.005}
+          polygonStrokeColor={() => (regionalMode ? "rgba(0, 212, 255, 0.5)" : "rgba(0, 212, 255, 0.2)")}
+          polygonAltitude={regionalMode ? 0.008 : 0.004}
           onPolygonClick={handlePolygonClick}
           pointsData={positions}
           pointLat="lat"
@@ -485,7 +499,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       )}
       {regionalMode ? (
         <div className={styles.regionalHint}>
-          Regional view · borders visible · click land or search a city to move observer
+          Regional view · double-click land or search a city to move observer
         </div>
       ) : null}
     </div>

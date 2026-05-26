@@ -100,7 +100,7 @@ export function ObserverPanel({
           onChange={(e) => handleSearch(e.target.value)}
           aria-label="Search observer location"
         />
-        <p className={styles.searchHint}>Pick a city to center the globe on your site. Click a satellite dot to track it.</p>
+        <p className={styles.searchHint}>Search or double-click land on the globe. Click a satellite dot to track it.</p>
         {searchResults.length > 0 && (
           <ul className={styles.results}>
             {searchResults.map((c) => (

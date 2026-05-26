@@ -14,7 +14,7 @@ const STEPS = [
   },
   {
     title: "Explore the globe",
-    body: "Click anywhere on Earth or a country border to inspect that location. Zoom in to see overhead satellites.",
+    body: "Double-click land to set your observer, or click a country border. Zoom in for regional detail and overhead satellite labels.",
   },
 ];
 
