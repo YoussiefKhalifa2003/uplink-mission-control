@@ -373,19 +373,6 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
     );
   }, [flyToSatelliteSeq, selectedNoradId, positions, globeReady, globeAltitude]);
 
-  const labelData = useMemo(() => {
-    const labels: Array<{ lat: number; lng: number; text: string; id: string }> = [];
-    if (observer) {
-      labels.push({ lat: observer.lat, lng: observer.lon, text: observer.name, id: "observer" });
-    }
-    for (const p of positions) {
-      if (p.showLabel) {
-        labels.push({ lat: p.lat, lng: p.lng, text: p.name, id: `sat-${p.noradId}` });
-      }
-    }
-    return labels;
-  }, [observer, positions]);
-
   const ringsData = useMemo(
     () =>
       observer
@@ -393,7 +380,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
             {
               lat: observer.lat,
               lng: observer.lon,
-              maxR: regionalMode ? 5 : commsScore <= 30 ? 3 : commsScore <= 60 ? 5 : 8,
+              maxR: regionalMode ? 4 : commsScore <= 30 ? 3 : commsScore <= 60 ? 5 : 8,
               propagationSpeed: 1.2,
               repeatPeriod: 1800,
             },
@@ -442,6 +429,12 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       data-comms={commsScore > 60 ? "critical" : commsScore > 30 ? "warning" : "normal"}
     >
       <GlobeHelp regionalMode={regionalMode} />
+      {observer ? (
+        <div className={styles.observerChip}>
+          <span className={styles.observerChipLabel}>Observer</span>
+          <span className={styles.observerChipName}>{observer.name}</span>
+        </div>
+      ) : null}
       {globeSized && (
         <Globe
           ref={globeRef}
@@ -471,7 +464,6 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
             if (pt.opacity < 1) return "rgba(180, 200, 220, 0.4)";
             return groupHex(pt.groupTag);
           }}
-          pointLabel="name"
           onPointClick={handlePointClick}
           pathsData={trackPaths}
           pathPoints="coords"
@@ -485,22 +477,10 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           ringMaxRadius="maxR"
           ringPropagationSpeed="propagationSpeed"
           ringRepeatPeriod="repeatPeriod"
-          labelsData={labelData}
-          labelLat="lat"
-          labelLng="lng"
-          labelText="text"
-          labelSize={(d: object) => ((d as { id?: string }).id === "observer" ? 1.35 : 0.8)}
-          labelColor={(d: object) => ((d as { id?: string }).id === "observer" ? "#00d4ff" : "#e8edf5")}
-          labelDotRadius={(d: object) => ((d as { id?: string }).id === "observer" ? 0.45 : 0.18)}
-          labelDotOrientation={() => "top"}
-          labelResolution={1}
-          labelIncludeDot
         />
       )}
       {regionalMode ? (
-        <div className={styles.regionalHint}>
-          Regional view · double-click land or search a city to move observer
-        </div>
+        <div className={styles.regionalHint}>Zoomed in · double-click land to move observer</div>
       ) : null}
     </div>
   );

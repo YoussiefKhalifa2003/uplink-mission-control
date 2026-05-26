@@ -8,7 +8,7 @@ interface GlobeHelpProps {
 }
 
 export function GlobeHelp({ regionalMode }: GlobeHelpProps) {
-  const [open, setOpen] = useState(() => localStorage.getItem(STORAGE_KEY) !== "0");
+  const [open, setOpen] = useState(() => localStorage.getItem(STORAGE_KEY) === "1");
 
   const toggle = (next: boolean) => {
     setOpen(next);

@@ -25,13 +25,17 @@
   top: 10px;
   left: 10px;
   z-index: 10;
-  width: 240px;
+  width: 220px;
+  max-width: calc(100% - 20px);
+  max-height: 140px;
+  overflow: hidden;
   background: rgba(10, 14, 23, 0.92);
   border: 1px solid rgba(0, 212, 255, 0.28);
   border-radius: 8px;
   padding: 8px 10px;
   pointer-events: auto;
   backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 .head {
