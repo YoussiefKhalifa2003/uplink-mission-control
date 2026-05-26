@@ -5,6 +5,7 @@ import type { Satellite, City } from "@uplink/shared";
 import { api } from "../../lib/api";
 import { splitTrackAtAntimeridian, subsampleTrack, trackToPathData, type TrackPoint } from "../../lib/groundTrackUtils";
 import { useUplinkStore } from "../../stores/uplinkStore";
+import { GlobeHelp } from "./GlobeHelp";
 import styles from "./GlobeView.module.css";
 
 interface SatPoint {
@@ -60,6 +61,8 @@ function configureGlobeControls(globe: GlobeMethods) {
   controls.enableRotate = true;
   controls.enableZoom = true;
   controls.enablePan = false;
+  controls.rotateSpeed = 0.35;
+  controls.zoomSpeed = 0.8;
   const renderer = globe.renderer();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   const canvas = renderer.domElement;
@@ -111,8 +114,6 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const workerRef = useRef<Worker | null>(null);
-  const lastSatFlyRef = useRef<number | null>(null);
-  const skipObserverFlyRef = useRef(true);
   const citiesRef = useRef<City[]>([]);
   const selectedNoradIdRef = useRef<number | null>(null);
   const observerRef = useRef<City | null>(null);
@@ -126,8 +127,11 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
   const observer = useUplinkStore((s) => s.observer);
   const selectedNoradId = useUplinkStore((s) => s.selectedNoradId);
   const globeAltitude = useUplinkStore((s) => s.globeAltitude);
+  const flyToObserverSeq = useUplinkStore((s) => s.flyToObserverSeq);
+  const flyToSatelliteSeq = useUplinkStore((s) => s.flyToSatelliteSeq);
   const setObserver = useUplinkStore((s) => s.setObserver);
   const setSelectedNoradId = useUplinkStore((s) => s.setSelectedNoradId);
+  const requestFlyToSatellite = useUplinkStore((s) => s.requestFlyToSatellite);
   const setLiveLookAngles = useUplinkStore((s) => s.setLiveLookAngles);
   const setPropagationTickAt = useUplinkStore((s) => s.setPropagationTickAt);
   const setOverheadSats = useUplinkStore((s) => s.setOverheadSats);
@@ -139,13 +143,6 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
 
   const displaySats = useMemo(() => satellites.slice(0, 40), [satellites]);
   const regionalMode = globeAltitude < REGIONAL_ALTITUDE;
-
-  const visiblePoints = useMemo(() => {
-    if (!regionalMode) return positions;
-    return positions.filter(
-      (p) => p.noradId === selectedNoradId || (p.elevationDeg != null && p.elevationDeg >= 0),
-    );
-  }, [positions, regionalMode, selectedNoradId]);
 
   useEffect(() => {
     if (!globeReady) return;
@@ -240,7 +237,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
               name: sat?.name ?? String(p.noradId),
               groupTag: sat?.groupTag,
               elevationDeg: el,
-              opacity: isRegional && !aboveHorizon ? 0.2 : 1,
+              opacity: isRegional && !aboveHorizon ? 0.35 : 1,
               showLabel: isRegional && (overhead || p.noradId === selected),
             };
           }),
@@ -310,37 +307,36 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
     return () => controls.removeEventListener("change", onChange);
   }, [globeReady, setGlobeAltitude]);
 
+  // City / observer fly — always takes priority over satellite tracking
   useEffect(() => {
-    if (!globeReady || !selectedNoradId || !globeRef.current) return;
-    if (lastSatFlyRef.current === selectedNoradId) return;
+    if (!globeReady || !globeRef.current || !observer || flyToObserverSeq === 0) return;
+    const alt = regionalMode ? 0.75 : 1.2;
+    globeRef.current.pointOfView({ lat: observer.lat, lng: observer.lon, altitude: alt }, 1200);
+  }, [flyToObserverSeq, globeReady, observer, regionalMode]);
+
+  // Satellite fly — only when user explicitly clicks a satellite
+  useEffect(() => {
+    if (!globeReady || !globeRef.current || flyToSatelliteSeq === 0) return;
     const pos = positions.find((p) => p.noradId === selectedNoradId);
     if (!pos) return;
-    lastSatFlyRef.current = selectedNoradId;
-    globeRef.current.pointOfView({ lat: pos.lat, lng: pos.lng, altitude: Math.min(globeAltitude, 2.5) }, 1500);
-  }, [selectedNoradId, positions, globeReady, globeAltitude]);
-
-  useEffect(() => {
-    if (!observer || !globeRef.current || !globeReady) return;
-    if (skipObserverFlyRef.current) {
-      skipObserverFlyRef.current = false;
-      return;
-    }
-    lastSatFlyRef.current = null;
-    globeRef.current.pointOfView({ lat: observer.lat, lng: observer.lon, altitude: 1.8 }, 1500);
-  }, [observer?.id, observer?.lat, observer?.lon, globeReady]);
+    globeRef.current.pointOfView(
+      { lat: pos.lat, lng: pos.lng, altitude: Math.max(0.55, Math.min(globeAltitude, 1.2)) },
+      1200,
+    );
+  }, [flyToSatelliteSeq, selectedNoradId, positions, globeReady, globeAltitude]);
 
   const labelData = useMemo(() => {
     const labels: Array<{ lat: number; lng: number; text: string; id: string }> = [];
     if (observer) {
       labels.push({ lat: observer.lat, lng: observer.lon, text: observer.name, id: "observer" });
     }
-    for (const p of visiblePoints) {
+    for (const p of positions) {
       if (p.showLabel) {
         labels.push({ lat: p.lat, lng: p.lng, text: p.name, id: `sat-${p.noradId}` });
       }
     }
     return labels;
-  }, [observer, visiblePoints]);
+  }, [observer, positions]);
 
   const ringsData = useMemo(
     () =>
@@ -349,9 +345,9 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
             {
               lat: observer.lat,
               lng: observer.lon,
-              maxR: regionalMode ? (commsScore <= 30 ? 4 : commsScore <= 60 ? 6 : 10) : commsScore <= 30 ? 3 : commsScore <= 60 ? 5 : 8,
-              propagationSpeed: commsScore > 60 ? 2 : 1,
-              repeatPeriod: commsScore > 60 ? 1200 : 2000,
+              maxR: regionalMode ? 5 : commsScore <= 30 ? 3 : commsScore <= 60 ? 5 : 8,
+              propagationSpeed: 1.2,
+              repeatPeriod: 1800,
             },
           ]
         : [],
@@ -378,7 +374,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
             timezone: "UTC",
           };
       setObserver(city);
-      setToastMessage(`Now tracking from ${city.name || `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`}`);
+      setToastMessage(`Observer set to ${city.name} — passes & tracking updated`);
     },
     [setObserver, setToastMessage],
   );
@@ -402,11 +398,9 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       );
       if (cityInCountry) {
         setObserver(cityInCountry);
-        setToastMessage(`Now tracking from ${cityInCountry.name}`);
-        globeRef.current?.pointOfView({ lat: cityInCountry.lat, lng: cityInCountry.lon, altitude: 1.5 }, 1500);
+        setToastMessage(`Observer set to ${cityInCountry.name}`);
       } else {
         void setObserverFromCoords(centroid.lat, centroid.lng, name);
-        globeRef.current?.pointOfView({ lat: centroid.lat, lng: centroid.lng, altitude: 1.5 }, 1500);
       }
     },
     [setObserver, setObserverFromCoords, setToastMessage],
@@ -414,14 +408,16 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
 
   const handlePointClick = useCallback(
     (point: object) => {
-      const noradId = (point as SatPoint).noradId;
-      if (noradId != null) setSelectedNoradId(noradId);
+      const pt = point as SatPoint;
+      if (pt.noradId == null) return;
+      setSelectedNoradId(pt.noradId);
+      requestFlyToSatellite();
+      setToastMessage(`Tracking ${pt.name} — click a city in the panel to return to your site`);
     },
-    [setSelectedNoradId],
+    [setSelectedNoradId, requestFlyToSatellite, setToastMessage],
   );
 
   const globeSized = dimensions.width > 0 && dimensions.height > 0;
-  const showCountryBorders = !regionalMode && countries.length > 0;
 
   return (
     <div
@@ -429,45 +425,49 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
       className={`${styles.globeWrap} ${regionalMode ? styles.regional : ""}`}
       data-comms={commsScore > 60 ? "critical" : commsScore > 30 ? "warning" : "normal"}
     >
+      <GlobeHelp regionalMode={regionalMode} />
       {globeSized && (
         <Globe
           ref={globeRef}
           width={dimensions.width}
           height={dimensions.height}
           globeImageUrl={EARTH_TEXTURE}
-          bumpImageUrl={NIGHT_TEXTURE}
+          bumpImageUrl={regionalMode ? undefined : NIGHT_TEXTURE}
           backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+          showAtmosphere
+          atmosphereColor="rgba(0, 200, 255, 0.14)"
+          atmosphereAltitude={0.18}
           enablePointerInteraction
           onGlobeReady={handleGlobeReady}
           onGlobeClick={handleGlobeClick}
-          polygonsData={showCountryBorders ? countries : []}
-          polygonCapColor={() => "rgba(0, 212, 255, 0.03)"}
+          polygonsData={countries}
+          polygonCapColor={() => (regionalMode ? "rgba(0, 212, 255, 0.08)" : "rgba(0, 212, 255, 0.04)")}
           polygonSideColor={() => "rgba(0, 0, 0, 0)"}
-          polygonStrokeColor={() => "rgba(0, 212, 255, 0.12)"}
-          polygonAltitude={0.004}
+          polygonStrokeColor={() => (regionalMode ? "rgba(0, 212, 255, 0.45)" : "rgba(0, 212, 255, 0.18)")}
+          polygonAltitude={regionalMode ? 0.01 : 0.005}
           onPolygonClick={handlePolygonClick}
-          pointsData={visiblePoints}
+          pointsData={positions}
           pointLat="lat"
           pointLng="lng"
           pointAltitude="alt"
-          pointRadius={(p: object) => ((p as SatPoint).noradId === selectedNoradId ? 0.55 : 0.3)}
+          pointRadius={(p: object) => ((p as SatPoint).noradId === selectedNoradId ? 0.6 : 0.32)}
           pointColor={(p: object) => {
             const pt = p as SatPoint;
             if (pt.noradId === selectedNoradId) return "#00d4ff";
-            if (pt.opacity < 1) return "rgba(140, 155, 180, 0.25)";
+            if (pt.opacity < 1) return "rgba(180, 200, 220, 0.4)";
             return groupHex(pt.groupTag);
           }}
-          pointLabel={(p: object) => (p as SatPoint).name}
+          pointLabel="name"
           onPointClick={handlePointClick}
           pathsData={trackPaths}
           pathPoints="coords"
           pathPointLat={(d: number | TrackPoint) => (Array.isArray(d) ? d[0] : 0)}
           pathPointLng={(d: number | TrackPoint) => (Array.isArray(d) ? d[1] : 0)}
           pathPointAlt={(d: number | TrackPoint) => (Array.isArray(d) ? d[2] : 0)}
-          pathColor={() => "rgba(0, 212, 255, 0.75)"}
-          pathStroke={1.5}
+          pathColor={() => "rgba(0, 212, 255, 0.85)"}
+          pathStroke={2}
           ringsData={ringsData}
-          ringColor={() => commsColor(commsScore)}
+          ringColor={() => (regionalMode ? "rgba(0, 212, 255, 0.5)" : commsColor(commsScore))}
           ringMaxRadius="maxR"
           ringPropagationSpeed="propagationSpeed"
           ringRepeatPeriod="repeatPeriod"
@@ -475,15 +475,19 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           labelLat="lat"
           labelLng="lng"
           labelText="text"
-          labelSize={(d: object) => ((d as { id?: string }).id === "observer" ? 1.2 : 0.75)}
+          labelSize={(d: object) => ((d as { id?: string }).id === "observer" ? 1.35 : 0.8)}
           labelColor={(d: object) => ((d as { id?: string }).id === "observer" ? "#00d4ff" : "#e8edf5")}
-          labelDotRadius={(d: object) => ((d as { id?: string }).id === "observer" ? 0.3 : 0.15)}
+          labelDotRadius={(d: object) => ((d as { id?: string }).id === "observer" ? 0.45 : 0.18)}
           labelDotOrientation={() => "top"}
           labelResolution={1}
-          labelIncludeDot={true}
+          labelIncludeDot
         />
       )}
-      {regionalMode ? <div className={styles.regionalHint}>Regional view · overhead labels only</div> : null}
+      {regionalMode ? (
+        <div className={styles.regionalHint}>
+          Regional view · borders visible · click land or search a city to move observer
+        </div>
+      ) : null}
     </div>
   );
 };

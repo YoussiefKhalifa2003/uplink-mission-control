@@ -5,6 +5,11 @@ dist
 *.db-journal
 .env
 .env.local
+.env.*.local
 coverage
 playwright-report
 test-results
+.DS_Store
+Thumbs.db
+*.log
+.cursor

@@ -26,8 +26,12 @@ interface UplinkState {
   overheadSats: OverheadSat[];
   globeAltitude: number;
   toastMessage: string | null;
+  flyToObserverSeq: number;
+  flyToSatelliteSeq: number;
   setObserver: (city: City) => void;
   setSelectedNoradId: (id: number) => void;
+  requestFlyToObserver: () => void;
+  requestFlyToSatellite: () => void;
   setAlerts: (alerts: Alert[]) => void;
   addAlert: (alert: Alert) => void;
   setCommsScore: (score: number) => void;
@@ -93,11 +97,15 @@ export const useUplinkStore = create<UplinkState>((set) => ({
   overheadSats: [],
   globeAltitude: 2.5,
   toastMessage: null,
+  flyToObserverSeq: 0,
+  flyToSatelliteSeq: 0,
   setObserver: (city) => {
     persistObserver(city);
-    set({ observer: city });
+    set((s) => ({ observer: city, flyToObserverSeq: s.flyToObserverSeq + 1 }));
   },
   setSelectedNoradId: (id) => set({ selectedNoradId: id }),
+  requestFlyToObserver: () => set((s) => ({ flyToObserverSeq: s.flyToObserverSeq + 1 })),
+  requestFlyToSatellite: () => set((s) => ({ flyToSatelliteSeq: s.flyToSatelliteSeq + 1 })),
   setAlerts: (alerts) => set({ alerts }),
   addAlert: (alert) =>
     set((s) => ({

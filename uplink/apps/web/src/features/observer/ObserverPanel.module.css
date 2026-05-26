@@ -71,6 +71,13 @@
   border-color: var(--accent-cyan);
 }
 
+.searchHint {
+  margin: 8px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
 .results {
   list-style: none;
   margin: 8px 0 0;

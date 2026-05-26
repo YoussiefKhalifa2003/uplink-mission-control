@@ -50,20 +50,23 @@
 
 
 
+.regional {
+  /* Keep globe bright when zoomed in — no dimming overlay */
+}
+
 .regionalHint {
   position: absolute;
   bottom: 12px;
   left: 12px;
+  right: 12px;
   font-family: var(--font-mono);
   font-size: 0.65rem;
   color: var(--accent-cyan);
-  background: rgba(0, 0, 0, 0.5);
-  padding: 4px 8px;
-  border-radius: 4px;
+  background: rgba(10, 14, 23, 0.85);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  padding: 8px 12px;
+  border-radius: 6px;
   pointer-events: none;
-}
-
-.regional {
-  box-shadow: inset 0 0 40px rgba(0, 212, 255, 0.08);
+  text-align: center;
 }
 

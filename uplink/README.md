@@ -12,6 +12,17 @@ An interactive 3D Earth dashboard that propagates satellites using SGP4/SDP4 orb
 - **Shareable passes:** `/pass/dubai/25544` — ISS passes over Dubai
 - **Weather dashboard:** `/weather` — Kp index, solar wind, comms degradation
 
+## Globe Controls
+
+| Action | Result |
+|--------|--------|
+| **Search a city** (right panel) | Camera flies to your **observer site** — passes & overhead sats recalculate |
+| **Click land / country** | Set observer to that location |
+| **Click satellite dot** | Track that satellite + show orbit path (camera follows sat) |
+| **Drag / scroll** | Rotate and zoom — zoom in for regional view with country borders |
+
+**Data scope:** Top bar metrics (Kp, solar wind) are **global**. Pass times, azimuth, elevation change per city.
+
 ## Features
 
 - Real-time satellite propagation via **SGP4/SDP4** (`satellite.js`)
