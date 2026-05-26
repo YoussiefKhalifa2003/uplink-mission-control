@@ -23,7 +23,7 @@ export function computeGroundTrack(
     const date = new Date(startTime.getTime() + sec * 1000);
     const pos = propagateToGeodetic(satrec, date);
     if (pos) {
-      points.push([pos.lat, pos.lng, pos.alt]);
+      points.push([pos.lat, pos.lng, 0.002]);
     }
   }
 

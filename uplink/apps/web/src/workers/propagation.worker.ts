@@ -10,10 +10,7 @@ import {
 
 
 
-  computeGroundTrack,
-
-
-
+  computeGroundTrackSegments,
   computeLookAngles,
 
 
@@ -466,11 +463,9 @@ self.onmessage = (ev: MessageEvent) => {
 
 
 
-    const track = computeGroundTrack(satrec, {
-      startTime: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-      sampleIntervalSec: 60,
-      orbits: 0.5,
-    });
+    const now = msg.timestamp ? new Date(msg.timestamp) : new Date();
+    const { past, future } = computeGroundTrackSegments(satrec, now);
+    const track = past.length ? [...past, ...future.slice(1)] : future;
 
 
 

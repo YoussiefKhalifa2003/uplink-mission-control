@@ -3,7 +3,7 @@ import Globe from "react-globe.gl";
 import type { GlobeMethods } from "react-globe.gl";
 import type { Satellite, City } from "@uplink/shared";
 import { api } from "../../lib/api";
-import { splitTrackAtAntimeridian, subsampleTrack, trackToPathData, type TrackPoint } from "../../lib/groundTrackUtils";
+import { prepareGroundTrackForGlobe, type TrackPoint } from "../../lib/groundTrackUtils";
 import { useUplinkStore } from "../../stores/uplinkStore";
 import { GlobeHelp } from "./GlobeHelp";
 import styles from "./GlobeView.module.css";
@@ -40,6 +40,7 @@ const REGIONAL_ALTITUDE = 1.5;
 const OBSERVER_FLY_ALTITUDE = 1.05;
 const OBSERVER_RING_ALTITUDE = 0.02;
 const OBSERVER_RING_COLOR = "rgba(139, 34, 82, 0.85)";
+const GROUND_TRACK_COLOR = "rgba(255, 176, 32, 0.9)";
 
 function groupHex(groupTag?: string): string {
   if (!groupTag) return "#ffffff";
@@ -113,6 +114,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
   const citiesRef = useRef<City[]>([]);
   const selectedNoradIdRef = useRef<number | null>(null);
   const observerRef = useRef<City | null>(null);
+  const positionsRef = useRef<SatPoint[]>([]);
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [globeReady, setGlobeReady] = useState(false);
@@ -136,6 +138,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
 
   observerRef.current = observer;
   selectedNoradIdRef.current = selectedNoradId;
+  positionsRef.current = positions;
 
   const displaySats = useMemo(() => satellites.slice(0, 40), [satellites]);
   const regionalMode = globeAltitude < REGIONAL_ALTITUDE;
@@ -256,9 +259,7 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
 
       if (data.type === "GROUND_TRACK") {
         if (data.noradId !== selectedNoradIdRef.current) return;
-        const sampled = subsampleTrack(data.track as TrackPoint[], 48);
-        const segments = splitTrackAtAntimeridian(sampled);
-        setTrackPaths(trackToPathData(segments));
+        setTrackPaths(prepareGroundTrackForGlobe(data.track as TrackPoint[]));
       }
     };
 
@@ -358,16 +359,17 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
     );
   }, [flyToObserverSeq, globeReady, observer]);
 
-  // Satellite fly — only when user explicitly clicks a satellite
+  // Satellite fly — only when user explicitly clicks a satellite (not on every position tick)
   useEffect(() => {
     if (!globeReady || !globeRef.current || flyToSatelliteSeq === 0) return;
-    const pos = positions.find((p) => p.noradId === selectedNoradId);
+    const pos = positionsRef.current.find((p) => p.noradId === selectedNoradId);
     if (!pos) return;
+    const alt = useUplinkStore.getState().globeAltitude;
     globeRef.current.pointOfView(
-      { lat: pos.lat, lng: pos.lng, altitude: Math.max(0.55, Math.min(globeAltitude, 1.2)) },
+      { lat: pos.lat, lng: pos.lng, altitude: Math.max(0.55, Math.min(alt, 1.2)) },
       1200,
     );
-  }, [flyToSatelliteSeq, selectedNoradId, positions, globeReady, globeAltitude]);
+  }, [flyToSatelliteSeq, selectedNoradId, globeReady]);
 
   const ringsData = useMemo(
     () =>
@@ -472,8 +474,8 @@ export function GlobeView({ satellites, commsScore }: GlobeViewProps) {
           pathPointLat={(d: number | TrackPoint) => (Array.isArray(d) ? d[0] : 0)}
           pathPointLng={(d: number | TrackPoint) => (Array.isArray(d) ? d[1] : 0)}
           pathPointAlt={(d: number | TrackPoint) => (Array.isArray(d) ? d[2] : 0)}
-          pathColor={() => "rgba(0, 212, 255, 0.85)"}
-          pathStroke={2}
+          pathColor={() => GROUND_TRACK_COLOR}
+          pathStroke={1.6}
           ringsData={ringsData}
           ringAltitude={OBSERVER_RING_ALTITUDE}
           ringColor={() => OBSERVER_RING_COLOR}
