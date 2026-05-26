@@ -1,0 +1,70 @@
+.banner {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  max-width: 90vw;
+  backdrop-filter: blur(12px);
+}
+
+.warning {
+  background: rgba(255, 176, 32, 0.2);
+  border: 1px solid var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+.critical {
+  background: rgba(255, 59, 59, 0.2);
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.severity {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.message {
+  color: var(--text-primary);
+}
+
+.ticker {
+  height: 32px;
+  overflow: hidden;
+  background: var(--bg-panel);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tickerTrack {
+  display: flex;
+  gap: 48px;
+  animation: scroll 30s linear infinite;
+  white-space: nowrap;
+  padding: 6px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tickerItem {
+  flex-shrink: 0;
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

@@ -1,0 +1,7 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "pnpm --filter @uplink/api start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300

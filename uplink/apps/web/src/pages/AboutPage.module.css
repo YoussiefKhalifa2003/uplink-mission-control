@@ -1,0 +1,44 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  padding: 32px;
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.back {
+  color: var(--accent-cyan);
+  text-decoration: none;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section h2 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-cyan);
+  margin-bottom: 12px;
+}
+
+.section ul {
+  padding-left: 20px;
+}
+
+.section a {
+  color: var(--accent-cyan);
+}
+
+.license {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 48px;
+}

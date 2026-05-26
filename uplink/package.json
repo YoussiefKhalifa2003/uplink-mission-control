@@ -1,0 +1,22 @@
+{
+  "name": "uplink",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Live orbital operations and space weather mission control",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "e2e": "pnpm --filter @uplink/web e2e"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

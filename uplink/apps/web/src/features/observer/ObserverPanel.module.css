@@ -1,0 +1,300 @@
+.panel {
+  width: 320px;
+  min-width: 280px;
+  background: var(--bg-panel);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.heading {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin: 0;
+  font-weight: 600;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.liveBadge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.livePulse {
+  animation: pulseLive 1s ease-in-out infinite;
+}
+
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.updated {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.search {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.search:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+
+.results {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.results button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.results button:hover {
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.observerInfo {
+  margin-top: 12px;
+}
+
+.observerName {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.coords {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.localTime {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.localTime span {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+}
+
+.passBanner,
+.countdownBanner {
+  margin: 0 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.passBanner {
+  background: rgba(0, 212, 255, 0.15);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.countdownBanner {
+  background: rgba(255, 176, 32, 0.1);
+  border: 1px solid rgba(255, 176, 32, 0.3);
+  color: var(--text-primary);
+}
+
+.overheadList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.overheadList button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.overheadList button:hover {
+  color: var(--accent-cyan);
+}
+
+.overheadName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.overheadEl {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+  font-size: 0.75rem;
+}
+
+.passList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.passList li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.passVisible {
+  border-left: 2px solid var(--accent-cyan);
+  padding-left: 8px !important;
+}
+
+.passTime {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.passMeta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.loading, .empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.satName {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.staleBadge {
+  font-size: 0.65rem;
+  background: var(--accent-amber);
+  color: var(--bg-deep);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.telemetry {
+  margin-top: 12px;
+}
+
+.telemetryRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 4px 0;
+  color: var(--text-muted);
+}
+
+.telemetryValue {
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+}
+
+.telemetryOk {
+  color: #4ade80;
+}
+
+.liveDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: pulseLive 1.5s ease-in-out infinite;
+}
+
+.updatedRow {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sectionNote {
+  padding: 12px 16px;
+  margin-top: auto;
+}
+
+.sectionNote p {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.sectionNote strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .panel {
+    width: 100%;
+    min-width: unset;
+    max-height: 40vh;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}

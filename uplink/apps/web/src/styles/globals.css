@@ -1,0 +1,44 @@
+:root {
+  --bg-deep: #0a0e17;
+  --bg-panel: #121a2a;
+  --accent-cyan: #00d4ff;
+  --accent-amber: #ffb020;
+  --accent-red: #ff3b3b;
+  --text-primary: #e8edf5;
+  --text-muted: #8b9bb4;
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+@keyframes metricPulse {
+  0% { color: var(--accent-cyan); text-shadow: 0 0 12px rgba(0, 212, 255, 0.8); }
+  100% { color: inherit; text-shadow: none; }
+}
+
+.metricPulse {
+  animation: metricPulse 1.2s ease-out;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--font-ui);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

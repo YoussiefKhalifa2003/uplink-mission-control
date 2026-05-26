@@ -1,0 +1,33 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.globeArea {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.globeLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 768px) {
+  .main {
+    flex-direction: column;
+  }
+}

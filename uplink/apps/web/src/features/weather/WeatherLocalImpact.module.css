@@ -1,0 +1,177 @@
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+  position: sticky;
+  top: 16px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.search {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.875rem;
+  margin-bottom: 12px;
+}
+
+.results {
+  list-style: none;
+  margin: -8px 0 12px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.results button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.results button:hover {
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.briefing {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  padding: 12px;
+  background: rgba(0, 212, 255, 0.06);
+  border-left: 3px solid var(--accent-cyan);
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 16px;
+}
+
+.loading {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.metric {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.metricLabel {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.metricValue {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--accent-cyan);
+  margin-top: 6px;
+}
+
+.passCard {
+  padding: 12px;
+  background: rgba(255, 176, 32, 0.08);
+  border: 1px solid rgba(255, 176, 32, 0.25);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.passLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.passTime {
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.passMeta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.tracking {
+  margin-bottom: 16px;
+}
+
+.trackingHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.trackingGrid {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent-cyan);
+}
+
+.commsNote {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.commsNote p {
+  margin: 8px 0 0;
+}
+
+.age {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+
+.pulse {
+  animation: metricPulse 1.2s ease-out;
+}
+
+@media (max-width: 960px) {
+  .panel {
+    position: static;
+  }
+}
